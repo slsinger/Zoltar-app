@@ -1,0 +1,16 @@
+
+{
+  "name": "Zoltar",
+  "short_name": "Zoltar",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#FFD700",
+  "icons": [
+    {
+      "src": "zoltar-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

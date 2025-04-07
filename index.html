@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Zoltar</title>
+  <style>
+    body {
+      font-family: 'Papyrus', fantasy;
+      background: black;
+      color: gold;
+      text-align: center;
+      padding: 50px;
+    }
+    #fortune {
+      font-size: 1.5em;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Zoltar Speaks</h1>
+  <p id="status">Say "Hello Zoltar"</p>
+  <p id="fortune"></p>
+
+  <script>
+    const fortunes = [
+      "You will soon embark on a thrilling adventure.",
+      "A surprise windfall is in your near future.",
+      "Someone close to you has a secret to share.",
+      "Patience will bring you great rewards.",
+      "You are destined for greatness — trust yourself.",
+      "Beware of decisions made in haste."
+    ];
+
+    const synth = window.speechSynthesis;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    let stage = 'idle';
+    let userName = '';
+
+    function speak(text) {
+      const utter = new SpeechSynthesisUtterance(text);
+      synth.speak(utter);
+    }
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+      console.log("Heard:", transcript);
+
+      if (stage === 'idle' && transcript.includes("hello zoltar")) {
+        speak("Greetings, seeker of wisdom. What is your name?");
+        document.getElementById("status").textContent = "Zoltar is listening for your name...";
+        stage = 'awaiting_name';
+      } else if (stage === 'awaiting_name') {
+        userName = transcript.split(" ").slice(-1)[0]; // crude name capture
+        speak(`Hello ${userName}. Would you like me to tell your fortune?`);
+        document.getElementById("status").textContent = `Hello ${userName}`;
+        stage = 'awaiting_yes';
+      } else if (stage === 'awaiting_yes' && transcript.includes("yes")) {
+        const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+        speak(fortune);
+        document.getElementById("fortune").textContent = fortune;
+        stage = 'idle';
+      }
+    };
+
+    recognition.onerror = (e) => {
+      console.error(e.error);
+      document.getElementById("status").textContent = "Error: " + e.error;
+    };
+
+    recognition.start();
+  </script>
+</body>
+</html>
