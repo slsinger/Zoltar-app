@@ -3,51 +3,69 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="manifest.json" />
-  <title>Zoltar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zoltar Speaks</title>
+  <link rel="icon" href="icon.png" type="image/png">
   <style>
     body {
-      font-family: 'Papyrus', fantasy;
-      background: black;
-      color: gold;
+      font-family: 'Georgia', serif;
+      background: #000;
+      color: #f4c842;
       text-align: center;
-      padding: 50px;
+      padding: 2em;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 1em;
     }
     #fortune {
       font-size: 1.5em;
-      margin-top: 30px;
+      margin-top: 2em;
+      padding: 1em;
+      border: 2px dashed #f4c842;
     }
   </style>
 </head>
 <body>
-  <h1>Zoltar Speaks</h1>
-  <p id="status">Say "Hello Zoltar"</p>
-  <p id="fortune"></p>
+  <h1>Zoltar Knows All 🔮</h1>
+  <p>Say: <strong>"Hello Zoltar"</strong> to begin</p>
+  <div id="fortune">...</div>
 
   <script>
     const fortunes = [
-      "You will soon embark on a thrilling adventure.",
-      "A surprise windfall is in your near future.",
-      "Someone close to you has a secret to share.",
-      "Patience will bring you great rewards.",
-      "You are destined for greatness — trust yourself.",
-      "Beware of decisions made in haste."
+      "Your future looks bright… unless you're driving without sunglasses again.",
+      "Good news: You’re not a total disaster. Bad news: You’re still in charge of your life.",
+      "You will soon receive clarity… from someone else's bad example.",
+      "You are special. Just like everyone else.",
+      "Happiness is just around the corner. Unfortunately, your GPS is terrible.",
+      "You will achieve greatness... through absolutely no effort of your own.",
+      "Love is in the air. Or maybe that’s just pollen. Either way, you’re sneezing.",
+      "A great opportunity is headed your way — unless you keep scrolling.",
+      "Beware of advice from talking robots.",
+      "Your aura needs a tune-up. And probably a nap."
     ];
-
-    const synth = window.speechSynthesis;
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = false;
 
     let stage = 'idle';
     let userName = '';
 
+    const synth = window.speechSynthesis;
+    let selectedVoice = null;
+
     function speak(text) {
+      if (!selectedVoice) {
+        const voices = synth.getVoices();
+        selectedVoice = voices.find(v => v.lang === 'en-US' && v.name.includes('Siri')) || voices[0];
+      }
+
       const utter = new SpeechSynthesisUtterance(text);
+      utter.voice = selectedVoice;
       synth.speak(utter);
     }
+
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
 
     recognition.onresult = (event) => {
       const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
@@ -55,12 +73,10 @@
 
       if (stage === 'idle' && transcript.includes("hello zoltar")) {
         speak("Greetings, seeker of wisdom. What is your name?");
-        document.getElementById("status").textContent = "Zoltar is listening for your name...";
         stage = 'awaiting_name';
       } else if (stage === 'awaiting_name') {
-        userName = transcript.split(" ").slice(-1)[0]; // crude name capture
+        userName = transcript.split(" ").slice(-1)[0];
         speak(`Hello ${userName}. Would you like me to tell your fortune?`);
-        document.getElementById("status").textContent = `Hello ${userName}`;
         stage = 'awaiting_yes';
       } else if (stage === 'awaiting_yes' && transcript.includes("yes")) {
         const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
@@ -68,14 +84,19 @@
         document.getElementById("fortune").textContent = fortune;
         stage = 'idle';
       }
+
+      recognition.stop();
+      setTimeout(() => recognition.start(), 300);
     };
 
-    recognition.onerror = (e) => {
-      console.error(e.error);
-      document.getElementById("status").textContent = "Error: " + e.error;
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
     };
 
-    recognition.start();
+    window.onload = () => {
+      synth.getVoices(); // preload voices
+      recognition.start();
+    };
   </script>
 </body>
 </html>
