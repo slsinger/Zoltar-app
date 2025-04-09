@@ -24,11 +24,22 @@
       padding: 1em;
       border: 2px dashed #f4c842;
     }
+    #startButton {
+      margin-top: 2em;
+      padding: 1em 2em;
+      font-size: 1em;
+      background-color: #f4c842;
+      border: none;
+      color: black;
+      cursor: pointer;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
   <h1>Zoltar Knows All 🔮</h1>
   <p>Say: <strong>"Hello Zoltar"</strong> to begin</p>
+  <button id="startButton">🔊 Start Listening</button>
   <div id="fortune">...</div>
 
   <script>
@@ -67,6 +78,14 @@
     recognition.interimResults = false;
     recognition.lang = 'en-US';
 
+    function startRecognition() {
+      try {
+        recognition.start();
+      } catch (e) {
+        console.warn("Recognition already started or not allowed:", e);
+      }
+    }
+
     recognition.onresult = (event) => {
       const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
       console.log("Heard:", transcript);
@@ -95,7 +114,10 @@
 
     window.onload = () => {
       synth.getVoices(); // preload voices
-      recognition.start();
+      document.getElementById("startButton").onclick = () => {
+        document.getElementById("startButton").style.display = 'none';
+        startRecognition();
+      };
     };
   </script>
 </body>
