@@ -87,7 +87,7 @@
     function startRecognition() {
       try {
         recognition.start();
-        document.getElementById('debug').textContent = 'Recognition started...';
+        document.getElementById('debug').textContent = '🎙 Listening...';
       } catch (e) {
         document.getElementById('debug').textContent = 'Error starting recognition: ' + e.message;
       }
@@ -97,7 +97,9 @@
       const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
       document.getElementById('debug').textContent = 'Heard: ' + transcript;
 
-      if (stage === 'idle' && transcript.includes("hello zoltar")) {
+      const greetings = ["hello", "hi", "hey", "zoltar", "hello zoltar", "hey zoltar", "hi zoltar", "call zoltar"];
+
+      if (stage === 'idle' && greetings.some(g => transcript.includes(g))) {
         speak("Greetings, seeker of wisdom. What is your name?");
         stage = 'awaiting_name';
       } else if (stage === 'awaiting_name') {
@@ -112,7 +114,7 @@
       }
 
       recognition.stop();
-      setTimeout(() => recognition.start(), 300);
+      setTimeout(() => recognition.start(), 500);
     };
 
     recognition.onerror = (event) => {
