@@ -93,29 +93,34 @@
       }
     }
 
-    recognition.onresult = (event) => {
-      const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
-      document.getElementById('debug').textContent = 'Heard: ' + transcript;
+   recognition.onresult = (event) => {
+  const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+  updateDebug('Heard: ' + transcript);
 
-      const greetings = ["hello", "hi", "hey", "zoltar", "hello zoltar", "hey zoltar", "hi zoltar", "call zoltar"];
+  const greetings = ["hello", "hi", "hey", "zoltar"];
 
-      if (stage === 'idle' && greetings.some(g => transcript.includes(g))) {
-        speak("Greetings, seeker of wisdom. What is your name?");
-        stage = 'awaiting_name';
-      } else if (stage === 'awaiting_name') {
-        userName = transcript.split(" ").slice(-1)[0];
-        speak(`Hello ${userName}. Would you like me to tell your fortune?`);
-        stage = 'awaiting_yes';
-      } else if (stage === 'awaiting_yes' && transcript.includes("yes")) {
-        const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
-        speak(fortune);
-        document.getElementById("fortune").textContent = fortune;
-        stage = 'idle';
-      }
+  if (stage === 'idle') {
+    const foundGreeting = greetings.find(g => transcript.includes(g));
+    if (foundGreeting) {
+      speak("Greetings, seeker of wisdom. What is your name?");
+      stage = 'awaiting_name';
+    }
+  } else if (stage === 'awaiting_name') {
+    userName = transcript.split(" ").slice(-1)[0];
+    speak(`Hello ${userName}. Would you like me to tell your fortune?`);
+    stage = 'awaiting_yes';
+  } else if (stage === 'awaiting_yes' && transcript.includes("yes")) {
+    const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+    speak(fortune);
+    document.getElementById("fortune").textContent = fortune;
+    stage = 'idle';
+  }
 
-      recognition.stop();
-      setTimeout(() => recognition.start(), 500);
-    };
+  updateDebug('Heard: ' + transcript);
+  recognition.stop();
+  setTimeout(() => recognition.start(), 500);
+};
+
 
     recognition.onerror = (event) => {
       document.getElementById('debug').textContent = 'Error: ' + event.error;
