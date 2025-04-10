@@ -34,6 +34,11 @@
       cursor: pointer;
       border-radius: 5px;
     }
+    #debug {
+      margin-top: 2em;
+      color: #aaa;
+      font-size: 0.9em;
+    }
   </style>
 </head>
 <body>
@@ -41,6 +46,7 @@
   <p>Say: <strong>"Hello Zoltar"</strong> to begin</p>
   <button id="startButton">🔊 Start Listening</button>
   <div id="fortune">...</div>
+  <div id="debug"></div>
 
   <script>
     const fortunes = [
@@ -81,14 +87,15 @@
     function startRecognition() {
       try {
         recognition.start();
+        document.getElementById('debug').textContent = 'Recognition started...';
       } catch (e) {
-        console.warn("Recognition already started or not allowed:", e);
+        document.getElementById('debug').textContent = 'Error starting recognition: ' + e.message;
       }
     }
 
     recognition.onresult = (event) => {
       const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
-      console.log("Heard:", transcript);
+      document.getElementById('debug').textContent = 'Heard: ' + transcript;
 
       if (stage === 'idle' && transcript.includes("hello zoltar")) {
         speak("Greetings, seeker of wisdom. What is your name?");
@@ -109,7 +116,7 @@
     };
 
     recognition.onerror = (event) => {
-      console.error("Speech recognition error:", event.error);
+      document.getElementById('debug').textContent = 'Error: ' + event.error;
     };
 
     window.onload = () => {
