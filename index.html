@@ -3,29 +3,108 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Zoltar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zoltar the Snarky</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 2em; }
+    #output { margin-top: 2em; }
+  </style>
 </head>
-<body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
-  <h1>🔮 Zoltar Speaks</h1>
-  <button id="startButton">Tap to Activate Zoltar</button>
-  <p id="output" style="margin-top: 2em;"></p>
+<body>
+  <h1>🔮 Zoltar Awaits</h1>
+  <button id="startButton">Tap to Awaken Zoltar</button>
+  <p id="output">Zoltar is sleeping...</p>
 
   <script>
-    const output = document.getElementById('output');
     const startButton = document.getElementById('startButton');
+    const output = document.getElementById('output');
+
+    const fortunes = [
+      "You will find success... unless you don’t.",
+      "The stars say no. But try anyway.",
+      "A mysterious figure will change your life. It might be your cat.",
+      "You are destined for greatness, or at least mediocrity.",
+      "Good news: you're not cursed. Probably.",
+      "Today’s fortune: try turning it off and on again.",
+      "You will soon achieve something minor, but satisfying.",
+      "A dubious opportunity approaches. Take it. Or don’t."
+    ];
+
+    let stage = 'awaiting_trigger';
+    let userName = '';
 
     function speak(text) {
       const utter = new SpeechSynthesisUtterance(text);
       const voices = speechSynthesis.getVoices();
       utter.voice = voices.find(v => v.name.includes("Samantha")) || voices[0];
       speechSynthesis.speak(utter);
-      output.textContent = "Zoltar says: " + text;
+      output.textContent = "🗣️ " + text;
+    }
+
+    function getRandomFortune() {
+      return fortunes[Math.floor(Math.random() * fortunes.length)];
+    }
+
+    function handleSpeechResult(transcript) {
+      const text = transcript.toLowerCase();
+      output.textContent = `🎧 Heard: ${text}`;
+
+      if (stage === 'awaiting_trigger' && text.includes("zoltar")) {
+        stage = 'awaiting_name';
+        speak("I am Zoltar. What is your name?");
+      } else if (stage === 'awaiting_name') {
+        userName = transcript;
+        stage = 'awaiting_confirmation';
+        speak(`Hello ${userName}. Would you like to know your fortune?`);
+      } else if (stage === 'awaiting_confirmation') {
+        if (text.includes("yes")) {
+          const fortune = getRandomFortune();
+          speak(`${userName}, your fortune is: ${fortune}`);
+          stage = 'done';
+        } else {
+          speak("Very well. Return when you seek truth.");
+          stage = 'done';
+        }
+      }
+    }
+
+    function startRecognition() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.continuous = false;
+
+      recognition.onstart = () => {
+        console.log("🎙️ Listening...");
+        output.textContent = "🎙️ Zoltar is listening...";
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.trim();
+        handleSpeechResult(transcript);
+        setTimeout(startRecognition, 2500); // Restart after short delay
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        output.textContent = "⚠️ Error: " + event.error;
+        setTimeout(startRecognition, 2500);
+      };
+
+      recognition.onend = () => {
+        if (stage !== 'done') {
+          console.log("🔁 Restarting recognition...");
+          setTimeout(startRecognition, 2500);
+        }
+      };
+
+      recognition.start();
     }
 
     startButton.addEventListener('click', () => {
-      speak("Greetings. I am Zoltar, the all-seeing. You may now speak your destiny.");
+      speak("Greetings, mortal. Say 'Hello Zoltar' to begin.");
       startButton.style.display = 'none';
+      setTimeout(startRecognition, 2500);
     });
   </script>
 </body>
