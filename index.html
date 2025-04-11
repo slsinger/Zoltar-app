@@ -1,142 +1,98 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Zoltar Speaks</title>
-  <link rel="icon" href="icon.png" type="image/png">
   <style>
-    body {
-      font-family: 'Georgia', serif;
-      background: #000;
-      color: #f4c842;
-      text-align: center;
-      padding: 2em;
-    }
-    h1 {
-      font-size: 2em;
-      margin-bottom: 1em;
-    }
-    #fortune {
-      font-size: 1.5em;
-      margin-top: 2em;
-      padding: 1em;
-      border: 2px dashed #f4c842;
-    }
-    #startButton {
-      margin-top: 2em;
-      padding: 1em 2em;
-      font-size: 1em;
-      background-color: #f4c842;
-      border: none;
-      color: black;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-    #debug {
-      margin-top: 2em;
-      color: #aaa;
-      font-size: 0.9em;
-    }
+    body { font-family: 'Georgia', serif; text-align: center; padding: 2em; background: #111; color: gold; }
+    h1 { font-size: 3em; }
+    button { font-size: 1.5em; padding: 0.5em 1em; margin-top: 1em; }
+    #fortune { margin-top: 2em; font-size: 2em; }
+    #debug { font-size: 0.8em; color: #888; margin-top: 2em; }
   </style>
 </head>
 <body>
-  <h1>Zoltar Knows All 🔮</h1>
-  <p>Say: <strong>"Hello Zoltar"</strong> to begin</p>
-  <button id="startButton">🔊 Start Listening</button>
-  <div id="fortune">...</div>
+  <h1>Zoltar Speaks</h1>
+  <button onclick="startRecognition()">🔮 Start Listening</button>
+  <div id="fortune"></div>
   <div id="debug"></div>
 
   <script>
     const fortunes = [
-      "Your future looks bright… unless you're driving without sunglasses again.",
-      "Good news: You’re not a total disaster. Bad news: You’re still in charge of your life.",
-      "You will soon receive clarity… from someone else's bad example.",
-      "You are special. Just like everyone else.",
-      "Happiness is just around the corner. Unfortunately, your GPS is terrible.",
-      "You will achieve greatness... through absolutely no effort of your own.",
-      "Love is in the air. Or maybe that’s just pollen. Either way, you’re sneezing.",
-      "A great opportunity is headed your way — unless you keep scrolling.",
-      "Beware of advice from talking robots.",
-      "Your aura needs a tune-up. And probably a nap."
+      "You will soon receive a refund... from the universe. Don't expect cash.",
+      "Your destiny is calling. It's a robocall. Don’t pick up.",
+      "Beware of tacos on Tuesdays. They know too much.",
+      "You will find happiness. It's probably in your other coat.",
+      "Soon, a mysterious package will arrive. Spoiler: you ordered it at 2am.",
+      "A great opportunity will come your way. You’ll be too tired to care.",
+      "You are wise beyond your browser history."
     ];
 
     let stage = 'idle';
     let userName = '';
-
     const synth = window.speechSynthesis;
     let selectedVoice = null;
 
     function updateDebug(text) {
-  document.getElementById('debug').textContent = `Stage: ${stage} | ${text}`;
-}
-
-    function speak(text) {
-      if (!selectedVoice) {
-        const voices = synth.getVoices();
-        selectedVoice = voices.find(v => v.lang === 'en-US' && v.name.includes('Siri')) || voices[0];
-      }
-
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.voice = selectedVoice;
-      synth.speak(utter);
+      document.getElementById('debug').textContent = `Stage: ${stage} | ${text}`;
     }
 
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.continuous = true;
+    function speak(text) {
+      console.log("Speaking:", text);
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.voice = selectedVoice || speechSynthesis.getVoices()[0];
+      utter.rate = 1;
+      speechSynthesis.speak(utter);
+    }
+
+    // Load voices
+    speechSynthesis.onvoiceschanged = () => {
+      const voices = speechSynthesis.getVoices();
+      selectedVoice = voices.find(v => v.name.includes("Samantha")) || voices[0];
+    };
+
+    const recognition = new webkitSpeechRecognition();
+    recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = 'en-US';
 
-    function startRecognition() {
-      try {
-        recognition.start();
-        document.getElementById('debug').textContent = '🎙 Listening...';
-      } catch (e) {
-        document.getElementById('debug').textContent = 'Error starting recognition: ' + e.message;
+    recognition.onstart = () => updateDebug("🎙 Listening...");
+    recognition.onerror = (event) => updateDebug("Error: " + event.error);
+    recognition.onend = () => console.log("Recognition ended.");
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+      console.log('Transcript:', transcript);
+      updateDebug(`Heard: ${transcript}`);
+
+      const greetings = ["hello", "hi", "hey", "zoltar", "hello zoltar", "hi zoltar"];
+
+      if (stage === 'idle') {
+        const foundGreeting = greetings.find(g => transcript.includes(g));
+        if (foundGreeting) {
+          speak("Greetings, seeker of wisdom. Please, just say your name.");
+          stage = 'awaiting_name';
+        }
+      } else if (stage === 'awaiting_name') {
+        const words = transcript.split(" ");
+        userName = words.find(word => !["my", "name", "is", "i'm", "am"].includes(word)) || "friend";
+        speak(`Hello ${userName}. Would you like me to tell your fortune?`);
+        stage = 'awaiting_yes';
+      } else if (stage === 'awaiting_yes' && transcript.includes("yes")) {
+        const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+        speak(fortune);
+        document.getElementById("fortune").textContent = fortune;
+        stage = 'idle';
       }
-    }
 
-   recognition.onresult = (event) => {
-  const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
-  updateDebug('Heard: ' + transcript);
-
-  const greetings = ["hello", "hi", "hey", "zoltar"];
-
-  if (stage === 'idle') {
-    const foundGreeting = greetings.find(g => transcript.includes(g));
-    if (foundGreeting) {
-      speak("Greetings, seeker of wisdom. What is your name?");
-      stage = 'awaiting_name';
-    }
-  } else if (stage === 'awaiting_name') {
-    userName = transcript.split(" ").slice(-1)[0];
-    speak(`Hello ${userName}. Would you like me to tell your fortune?`);
-    stage = 'awaiting_yes';
-  } else if (stage === 'awaiting_yes' && transcript.includes("yes")) {
-    const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
-    speak(fortune);
-    document.getElementById("fortune").textContent = fortune;
-    stage = 'idle';
-  }
-
-  updateDebug('Heard: ' + transcript);
-  recognition.stop();
-  setTimeout(() => recognition.start(), 500);
-};
-
-
-    recognition.onerror = (event) => {
-      document.getElementById('debug').textContent = 'Error: ' + event.error;
+      recognition.stop();
+      setTimeout(() => recognition.start(), 500);
     };
 
-    window.onload = () => {
-      synth.getVoices(); // preload voices
-      document.getElementById("startButton").onclick = () => {
-        document.getElementById("startButton").style.display = 'none';
-        startRecognition();
-      };
-    };
+    function startRecognition() {
+      recognition.start();
+    }
   </script>
 </body>
 </html>
