@@ -68,6 +68,10 @@
     const synth = window.speechSynthesis;
     let selectedVoice = null;
 
+    function updateDebug(text) {
+  document.getElementById('debug').textContent = `Stage: ${stage} | ${text}`;
+}
+
     function speak(text) {
       if (!selectedVoice) {
         const voices = synth.getVoices();
