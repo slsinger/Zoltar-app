@@ -1,98 +1,32 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Zoltar Speaks</title>
-  <style>
-    body { font-family: 'Georgia', serif; text-align: center; padding: 2em; background: #111; color: gold; }
-    h1 { font-size: 3em; }
-    button { font-size: 1.5em; padding: 0.5em 1em; margin-top: 1em; }
-    #fortune { margin-top: 2em; font-size: 2em; }
-    #debug { font-size: 0.8em; color: #888; margin-top: 2em; }
-  </style>
+  <title>Zoltar</title>
 </head>
-<body>
-  <h1>Zoltar Speaks</h1>
-  <button onclick="startRecognition()">🔮 Start Listening</button>
-  <div id="fortune"></div>
-  <div id="debug"></div>
+<body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
+  <h1>🔮 Zoltar Speaks</h1>
+  <button id="startButton">Tap to Activate Zoltar</button>
+  <p id="output" style="margin-top: 2em;"></p>
 
   <script>
-    const fortunes = [
-      "You will soon receive a refund... from the universe. Don't expect cash.",
-      "Your destiny is calling. It's a robocall. Don’t pick up.",
-      "Beware of tacos on Tuesdays. They know too much.",
-      "You will find happiness. It's probably in your other coat.",
-      "Soon, a mysterious package will arrive. Spoiler: you ordered it at 2am.",
-      "A great opportunity will come your way. You’ll be too tired to care.",
-      "You are wise beyond your browser history."
-    ];
-
-    let stage = 'idle';
-    let userName = '';
-    const synth = window.speechSynthesis;
-    let selectedVoice = null;
-
-    function updateDebug(text) {
-      document.getElementById('debug').textContent = `Stage: ${stage} | ${text}`;
-    }
+    const output = document.getElementById('output');
+    const startButton = document.getElementById('startButton');
 
     function speak(text) {
-      console.log("Speaking:", text);
       const utter = new SpeechSynthesisUtterance(text);
-      utter.voice = selectedVoice || speechSynthesis.getVoices()[0];
-      utter.rate = 1;
-      speechSynthesis.speak(utter);
-    }
-
-    // Load voices
-    speechSynthesis.onvoiceschanged = () => {
       const voices = speechSynthesis.getVoices();
-      selectedVoice = voices.find(v => v.name.includes("Samantha")) || voices[0];
-    };
-
-    const recognition = new webkitSpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-
-    recognition.onstart = () => updateDebug("🎙 Listening...");
-    recognition.onerror = (event) => updateDebug("Error: " + event.error);
-    recognition.onend = () => console.log("Recognition ended.");
-
-    recognition.onresult = (event) => {
-      const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
-      console.log('Transcript:', transcript);
-      updateDebug(`Heard: ${transcript}`);
-
-      const greetings = ["hello", "hi", "hey", "zoltar", "hello zoltar", "hi zoltar"];
-
-      if (stage === 'idle') {
-        const foundGreeting = greetings.find(g => transcript.includes(g));
-        if (foundGreeting) {
-          speak("Greetings, seeker of wisdom. Please, just say your name.");
-          stage = 'awaiting_name';
-        }
-      } else if (stage === 'awaiting_name') {
-        const words = transcript.split(" ");
-        userName = words.find(word => !["my", "name", "is", "i'm", "am"].includes(word)) || "friend";
-        speak(`Hello ${userName}. Would you like me to tell your fortune?`);
-        stage = 'awaiting_yes';
-      } else if (stage === 'awaiting_yes' && transcript.includes("yes")) {
-        const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
-        speak(fortune);
-        document.getElementById("fortune").textContent = fortune;
-        stage = 'idle';
-      }
-
-      recognition.stop();
-      setTimeout(() => recognition.start(), 500);
-    };
-
-    function startRecognition() {
-      recognition.start();
+      utter.voice = voices.find(v => v.name.includes("Samantha")) || voices[0];
+      speechSynthesis.speak(utter);
+      output.textContent = "Zoltar says: " + text;
     }
+
+    startButton.addEventListener('click', () => {
+      speak("Greetings. I am Zoltar, the all-seeing. You may now speak your destiny.");
+      startButton.style.display = 'none';
+    });
   </script>
 </body>
 </html>
