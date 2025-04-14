@@ -32,26 +32,26 @@
 
     let stage = 'awaiting_trigger';
     let userName = '';
+    let isSpeaking = false;
 
-function speak(text) {
-  const utter = new SpeechSynthesisUtterance(text);
-  const voices = speechSynthesis.getVoices();
-  utter.voice = voices.find(v => v.name.includes("Samantha")) || voices[0];
+    function speak(text) {
+      const utter = new SpeechSynthesisUtterance(text);
+      const voices = speechSynthesis.getVoices();
+      utter.voice = voices.find(v => v.name.includes("Samantha")) || voices[0];
 
-  utter.onstart = () => {
-    console.log("🔊 Speaking: " + text);
-    output.textContent = "🗣️ " + text;
-  };
+      isSpeaking = true;
+      output.textContent = "🗣️ " + text;
 
-  utter.onend = () => {
-    console.log("🔊 Done speaking");
-    if (stage !== 'done') {
-      setTimeout(startRecognition, 1000); // Wait a bit before listening again
+      utter.onend = () => {
+        console.log("🔊 Done speaking");
+        isSpeaking = false;
+        if (stage !== 'done') {
+          setTimeout(startRecognition, 1000);
+        }
+      };
+
+      speechSynthesis.speak(utter);
     }
-  };
-
-  speechSynthesis.speak(utter);
-}
 
     function getRandomFortune() {
       return fortunes[Math.floor(Math.random() * fortunes.length)];
@@ -81,6 +81,12 @@ function speak(text) {
     }
 
     function startRecognition() {
+      if (isSpeaking) {
+        console.log("⏳ Delaying recognition — still speaking");
+        setTimeout(startRecognition, 500);
+        return;
+      }
+
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
       recognition.lang = 'en-US';
       recognition.interimResults = false;
@@ -94,19 +100,17 @@ function speak(text) {
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript.trim();
         handleSpeechResult(transcript);
-        
       };
 
       recognition.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
+        console.error("⚠️ Speech recognition error:", event.error);
         output.textContent = "⚠️ Error: " + event.error;
-        setTimeout(startRecognition, 2500);
+        setTimeout(startRecognition, 1500);
       };
 
       recognition.onend = () => {
-        if (stage !== 'done') {
-          console.log("🔁 Restarting recognition...");
-          setTimeout(startRecognition, 2500);
+        if (!isSpeaking && stage !== 'done') {
+          setTimeout(startRecognition, 1500);
         }
       };
 
@@ -116,7 +120,6 @@ function speak(text) {
     startButton.addEventListener('click', () => {
       speak("Greetings, mortal. Say 'Hello Zoltar' to begin.");
       startButton.style.display = 'none';
-      
     });
   </script>
 </body>
