@@ -37,10 +37,16 @@
     let zoltarVoice = null;
 
     window.speechSynthesis.onvoiceschanged = () => {
-      const voices = speechSynthesis.getVoices();
-      zoltarVoice = voices.find(v => v.name.includes("Samantha")) || voices[0];
-    };
-
+  const voices = speechSynthesis.getVoices();
+  zoltarVoice = voices.find(v =>
+    v.name.includes("Alex") ||
+    v.name.includes("Google UK English Male") ||
+    v.name.includes("Daniel") ||
+    v.name.includes("Fred") ||
+    v.name.includes("Microsoft David") ||
+    v.name.includes("Google US English")
+  ) || voices[0];
+};
     function speak(text) {
       const utter = new SpeechSynthesisUtterance(text);
       utter.voice = zoltarVoice;
