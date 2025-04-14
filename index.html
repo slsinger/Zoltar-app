@@ -29,29 +29,30 @@
       "You will soon achieve something minor, but satisfying.",
       "A dubious opportunity approaches. Take it. Or don’t."
     ];
-
+    
+    let recognition = null;
     let stage = 'awaiting_trigger';
     let userName = '';
     let isSpeaking = false;
 
-    function speak(text) {
-      const utter = new SpeechSynthesisUtterance(text);
-      const voices = speechSynthesis.getVoices();
-      utter.voice = voices.find(v => v.name.includes("Samantha")) || voices[0];
+function speak(text) {
+  const utter = new SpeechSynthesisUtterance(text);
+  const voices = speechSynthesis.getVoices();
+  utter.voice = voices.find(v => v.name.includes("Samantha")) || voices[0];
 
-      isSpeaking = true;
-      output.textContent = "🗣️ " + text;
+  isSpeaking = true;
+  output.textContent = "🗣️ " + text;
 
-      utter.onend = () => {
-        console.log("🔊 Done speaking");
-        isSpeaking = false;
-        if (stage !== 'done') {
-          setTimeout(startRecognition, 1000);
-        }
-      };
-
-      speechSynthesis.speak(utter);
+  utter.onend = () => {
+    console.log("🔊 Done speaking");
+    isSpeaking = false;
+    if (stage !== 'done') {
+      setTimeout(startRecognition, 1000);
     }
+  };
+
+  speechSynthesis.speak(utter);
+}
 
     function getRandomFortune() {
       return fortunes[Math.floor(Math.random() * fortunes.length)];
@@ -80,42 +81,50 @@
       }
     }
 
-    function startRecognition() {
-      if (isSpeaking) {
-        console.log("⏳ Delaying recognition — still speaking");
-        setTimeout(startRecognition, 500);
-        return;
-      }
+function startRecognition() {
+  if (isSpeaking) {
+    console.log("⏳ Delaying recognition — still speaking");
+    setTimeout(startRecognition, 500);
+    return;
+  }
 
-      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = 'en-US';
-      recognition.interimResults = false;
-      recognition.continuous = false;
+  if (recognition) {
+    recognition.abort(); // Clean up old instance
+  }
 
-      recognition.onstart = () => {
-        console.log("🎙️ Listening...");
-        output.textContent = "🎙️ Zoltar is listening...";
-      };
+  recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.continuous = false;
 
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript.trim();
-        handleSpeechResult(transcript);
-      };
+  recognition.onstart = () => {
+    console.log("🎙️ Listening...");
+    output.textContent = "🎙️ Zoltar is listening...";
+  };
 
-      recognition.onerror = (event) => {
-        console.error("⚠️ Speech recognition error:", event.error);
-        output.textContent = "⚠️ Error: " + event.error;
-        setTimeout(startRecognition, 1500);
-      };
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript.trim();
+    console.log("✅ Heard: " + transcript);
+    handleSpeechResult(transcript);
+  };
 
-      recognition.onend = () => {
-        if (!isSpeaking && stage !== 'done') {
-          setTimeout(startRecognition, 1500);
-        }
-      };
-
-      recognition.start();
+  recognition.onerror = (event) => {
+    console.error("⚠️ Speech recognition error:", event.error);
+    output.textContent = "⚠️ Error: " + event.error;
+    if (event.error !== "aborted") {
+      setTimeout(startRecognition, 1500);
     }
+  };
+
+  recognition.onend = () => {
+    if (!isSpeaking && stage !== 'done') {
+      console.log("🔁 Restarting recognition after end");
+      setTimeout(startRecognition, 1000);
+    }
+  };
+
+  recognition.start();
+}
 
     startButton.addEventListener('click', () => {
       speak("Greetings, mortal. Say 'Hello Zoltar' to begin.");
