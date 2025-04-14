@@ -33,13 +33,25 @@
     let stage = 'awaiting_trigger';
     let userName = '';
 
-    function speak(text) {
-      const utter = new SpeechSynthesisUtterance(text);
-      const voices = speechSynthesis.getVoices();
-      utter.voice = voices.find(v => v.name.includes("Samantha")) || voices[0];
-      speechSynthesis.speak(utter);
-      output.textContent = "🗣️ " + text;
+function speak(text) {
+  const utter = new SpeechSynthesisUtterance(text);
+  const voices = speechSynthesis.getVoices();
+  utter.voice = voices.find(v => v.name.includes("Samantha")) || voices[0];
+
+  utter.onstart = () => {
+    console.log("🔊 Speaking: " + text);
+    output.textContent = "🗣️ " + text;
+  };
+
+  utter.onend = () => {
+    console.log("🔊 Done speaking");
+    if (stage !== 'done') {
+      setTimeout(startRecognition, 1000); // Wait a bit before listening again
     }
+  };
+
+  speechSynthesis.speak(utter);
+}
 
     function getRandomFortune() {
       return fortunes[Math.floor(Math.random() * fortunes.length)];
@@ -82,7 +94,7 @@
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript.trim();
         handleSpeechResult(transcript);
-        setTimeout(startRecognition, 2500); // Restart after short delay
+        
       };
 
       recognition.onerror = (event) => {
@@ -104,7 +116,7 @@
     startButton.addEventListener('click', () => {
       speak("Greetings, mortal. Say 'Hello Zoltar' to begin.");
       startButton.style.display = 'none';
-      setTimeout(startRecognition, 2500);
+      
     });
   </script>
 </body>
